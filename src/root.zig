@@ -562,6 +562,24 @@ pub fn RedBlackTreeUnmanaged(comptime Key: type, comptime compareFn: anytype) ty
                 }
             }
         } 
+        pub fn preNode(self: Self, node: *Node) ?*Node {
+            if (node.children[0]) |lson| {
+                return self.findSubMax(lson); 
+            } 
+            var up: *Node = node; 
+            while (true) {
+                if (up.parent) |p| {
+                    const he_is_right = p.children[1] == up; 
+                    if (he_is_right) {
+                        return p; 
+                    } else {
+                        up = p; 
+                    }
+                } else {
+                    return null; 
+                }
+            }
+        } 
         pub const Entry = struct {
             key: Key, 
             tree: *Self, 
@@ -790,3 +808,34 @@ test {
     assert ( set.items.len == 1 ); 
     assert ( set.inner_tree.root.?.key == 7 ); 
 } 
+
+test "order-insert-and-next" {
+    var set = I32Set.init(testing.allocator); 
+    defer set.deinit();
+    for (0..20) |i| {
+        assert ( try set.append(@intCast(i)) ); 
+    } 
+    var min = set.inner_tree.getMin(); 
+    assert( min != null ); 
+    var idx : i32 = 0; 
+    while (min != null): (min = set.inner_tree.nextNode(min.?)) {
+        assert( idx == min.?.key ); 
+        idx += 1; 
+    }
+}
+
+test "order-insert-and-pre" {
+    var set = I32Set.init(testing.allocator); 
+    defer set.deinit();
+    for (0..30) |i| {
+        const i_32 : i32 = @intCast(i); 
+        assert ( try set.append(i_32 - 5) ); 
+    } 
+    var node = set.inner_tree.getMax(); 
+    assert( node != null ); 
+    var idx : i32 = 24; 
+    while (node != null): (node = set.inner_tree.preNode(node.?)) {
+        assert( idx == node.?.key ); 
+        idx -= 1; 
+    }
+}
