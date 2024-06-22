@@ -25,7 +25,7 @@ pub fn build(b: *std.Build) void {
     });
 
     _ = b.addModule("rbtree", .{ 
-        .root_source_file = .{ .path = "src/root.zig" }, 
+        .root_source_file = b.path("src/root.zig"),  
     }); 
 
     // This declares intent for the library to be installed into the standard
